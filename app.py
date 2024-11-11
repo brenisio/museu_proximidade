@@ -48,11 +48,6 @@ def receber_dados():
     print(request.form)
     distancia = request.form.get('distancia', type=int)
     if distancia is not None:
-        # Ajusta o horário para subtrair 3 horas
-        hora_utc = datetime.utcnow()  # Hora UTC atual
-        hora_local = hora_utc - timedelta(hours=3)  # Subtraindo 3 horas para ajustar ao fuso horário local
-        hora_local_formatada = hora_local.strftime('%Y-%m-%d %H:%M:%S')  # Formatação da hora
-
         if distancia > 0 and distancia < 10:
             risco = "PERIGO EMINENTE DE ROUBO!"
         elif distancia >= 10 and distancia < 20:
@@ -65,7 +60,7 @@ def receber_dados():
         nova_leitura = LeitorProximidade(
             distancia=distancia,
             risco=risco,
-            data=hora_local_formatada  # Usa a hora ajustada
+            data=datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S'),
         )
         db.session.add(nova_leitura)
         db.session.commit()
