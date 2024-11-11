@@ -47,6 +47,8 @@ def arduino_data():
 def receber_dados():
     print(request.form)
     distancia = request.form.get('distancia', type=int)
+
+    hora_ajustada = (datetime.utcnow() - timedelta(hours=5)).strftime('%Y-%m-%d %H:%M:%S')
     if distancia is not None:
         if distancia > 0 and distancia < 10:
             risco = "PERIGO EMINENTE DE ROUBO!"
@@ -60,7 +62,7 @@ def receber_dados():
         nova_leitura = LeitorProximidade(
             distancia=distancia,
             risco=risco,
-            data=datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S'),
+            data=hora_ajustada,
         )
         db.session.add(nova_leitura)
         db.session.commit()
