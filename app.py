@@ -17,7 +17,7 @@ db = SQLAlchemy(app)
 class LeitorProximidade(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     distancia = db.Column(db.Integer, nullable=False)
-    risco = db.Column(db.String(10), nullable=False)
+    risco = db.Column(db.String(100), nullable=False)
     data = db.Column(db.DateTime, default=datetime.utcnow)
 
 
