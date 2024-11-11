@@ -44,9 +44,10 @@ def arduino_data():
     return jsonify({'distancia': distancia, 'risco': risco, 'data': new_reading.data})
 
 
-@app.route('/receber_dados')
+@app.route('/receber_dados', methods=['POST'])
 def receber_dados():
-    distancia = request.args.get('distancia', type=int)
+    print(request.form)
+    distancia = request.form.get('distancia', type=int)
     if distancia is not None:
         risco = "Alto" if distancia < 50 else "Baixo"
         nova_leitura = LeitorProximidade(distancia=distancia, risco=risco, data=datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S'))
@@ -56,7 +57,6 @@ def receber_dados():
         return jsonify({'status': 'sucesso', 'distancia': distancia, 'risco': risco})
     else:
         return jsonify({'status': 'erro', 'mensagem': 'Distância não especificada'}), 400
-
 
 if __name__ == '__main__':
     with app.app_context():
