@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leitor de Proximidade</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        async function fetchLeituras() {
+            const response = await fetch('/leituras');
+            let data = await response.json();
+            console.log(data);
+
+            // Ordenar os dados: primeiro pela data (decrescente), depois pelo risco
+            data.sort((a, b) => {
+                const dateComparison = new Date(b.data) - new Date(a.data); // Data decrescente
+                if (dateComparison === 0) {
+                    // Se as datas forem iguais, ordenar pelo risco
+                    if (a.distancia > 0 && a.distancia < 10) return -1;
+                    if (b.distancia > 0 && b.distancia < 10) return 1;
+                    if (a.distancia >= 10 && a.distancia < 20) return -1;
+                    if (b.distancia >= 10 && b.distancia < 20) return 1;
+                    return 0;
+                }
+                return dateComparison;
+            });
+
+            const container = document.getElementById('leituras-container');
+            container.innerHTML = '';
+
+            const riskCounts = {
+                "PERIGO EMINENTE DE ROUBO!": 0,
+                "ALERTA! Pessoa próxima a peça!": 0,
+                "Observar movimento!": 0
+            };
+
+            data.forEach(item => {
+                let risco = "";
+                if (item.distancia > 0 && item.distancia < 10) {
+                    risco = "PERIGO EMINENTE DE ROUBO!";
+                } else if (item.distancia >= 10 && item.distancia < 20) {
+                    risco = "ALERTA! Pessoa próxima a peça!";
+                } else if (item.distancia >= 20 && item.distancia < 50) {
+                    risco = "Observar movimento!";
+                }
+
+                // Incrementar o contador de riscos
+                if (risco) {
+                    riskCounts[risco]++;
+                }
+
+                // Definir a classe CSS com base na distância
+                let colorClass = "";
+                if (item.distancia < 10) {
+                    colorClass = "bg-danger text-white"; // Vermelho
+                } else if (item.distancia >= 10 && item.distancia < 20) {
+                    colorClass = "bg-warning text-dark"; // Amarelo
+                }
+
+                // Adicionar ao container
+                const row = `
+                    <div class="card mb-2 ${colorClass}">
+                        <div class="card-body">
+                            <h5 class="card-title">Distância: ${item.distancia} cm</h5>
+                            <p class="card-text">Risco: ${risco}</p>
+                            <p class="card-text text-muted">Data: ${new Date(item.data).toLocaleString()}</p>
+                        </div>
+                    </div>
+                `;
+                container.innerHTML += row;
+            });
+
+            // Atualiza o gráfico
+            updateChart(Object.keys(riskCounts), Object.values(riskCounts));
+        }
+
+        let chart; // Referência global ao gráfico
+
+        function createChart() {
+            const ctx = document.getElementById('myChart').getContext('2d');
+            chart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: [], // Etiquetas de risco
+                    datasets: [{
+                        label: 'Quantidade de alertas',
+                        data: [], // Dados de contagem
+                        backgroundColor: [
+                            'rgba(255, 99, 132, 0.2)',
+                            'rgba(255, 205, 86, 0.2)',
+                            'rgba(54, 162, 235, 0.2)'
+                        ],
+                        borderColor: [
+                            'rgba(255, 99, 132, 1)',
+                            'rgba(255, 205, 86, 1)',
+                            'rgba(54, 162, 235, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { display: true }
+                    },
+                    scales: {
+                        x: { title: { display: true, text: 'Riscos' } },
+                        y: { title: { display: true, text: 'Quantidade' }, beginAtZero: true }
+                    }
+                }
+            });
+        }
+
+        function updateChart(labels, values) {
+            chart.data.labels = labels;
+            chart.data.datasets[0].data = values;
+            chart.update();
+        }
+
+        window.onload = () => {
+            createChart();
+            fetchLeituras();
+            setInterval(fetchLeituras, 5000); // Atualiza a cada 5 segundos
+        };
+    </script>
+</head>
+
+<body>
+    <div class="container mt-4">
+        <h1 class="text-center mb-4">Leitor de Proximidade</h1>
+        <canvas id="myChart" class="mb-4"></canvas>
+        <div id="leituras-container">
+            <p class="text-center">Carregando dados...</p>
+        </div>
+    </div>
+</body>
+
+</html>

@@ -23,18 +23,22 @@ class LeitorProximidade(db.Model):
 
 @app.route('/')
 def index():
-    return "Servidor Flask em execução!"
+    return render_template('index.html')
 
 
 @app.route('/leituras')
 def ver_leituras():
     leituras = LeitorProximidade.query.order_by(LeitorProximidade.data.desc()).all()
-    return jsonify([{'distancia': l.distancia, 'risco': l.risco, 'data': l.data} for l in leituras])
+    return jsonify([{
+        'distancia': l.distancia,
+        'risco': l.risco,
+        'data': l.data.strftime('%Y-%m-%d %H:%M:%S')
+    } for l in leituras])
 
 
 @app.route('/arduino')
 def arduino_data():
-    distancia = random.randint(10, 100)
+    distancia = random.randint(0, 15)
     risco = "Alto" if distancia < 50 else "Baixo"
 
     new_reading = LeitorProximidade(distancia=distancia, risco=risco)
